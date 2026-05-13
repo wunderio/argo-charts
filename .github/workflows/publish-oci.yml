@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  REGISTRY_PATH: ghcr.io/wunderio/charts
+  REGISTRY_PATH: ghcr.io/wunderio/argo-charts
 
 jobs:
   publish:
