@@ -13,7 +13,8 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ${{ vars.REGISTRY || 'registry.wdr.io' }}
+  REGISTRY: ghcr.io
+  REGISTRY_PATH: ghcr.io/wunderio/charts
 
 jobs:
   publish:
@@ -21,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -52,14 +54,14 @@ jobs:
           PKG=$(ls /tmp/charts/${{ matrix.chart }}-*.tgz)
           echo "package=${PKG}" >> "$GITHUB_OUTPUT"
 
-      - name: Log in to OCI registry
+      - name: Log in to GHCR
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
             helm registry login "${{ env.REGISTRY }}" \
-              --username "${{ secrets.REGISTRY_USERNAME }}" \
+              --username "${{ github.actor }}" \
               --password-stdin
 
-      - name: Push chart to OCI registry
+      - name: Push chart to GHCR
         run: |
           helm push "${{ steps.package.outputs.package }}" \
-            "oci://${{ env.REGISTRY }}/charts"
+            "oci://${{ env.REGISTRY_PATH }}"
