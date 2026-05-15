@@ -30,8 +30,6 @@ jobs:
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
-        with:
-          version: v3.16.4
 
       - name: Add dependency repos
         run: |
@@ -55,9 +53,9 @@ jobs:
 
       - name: Log in to Harbor
         run: |
-          helm registry login "${{ env.REGISTRY }}" \
-            --username "${{ secrets.REGISTRY_USERNAME }}" \
-            --password "${{ secrets.REGISTRY_PASSWORD }}"
+          helm registry login '${{ env.REGISTRY }}' \
+            --username '${{ secrets.REGISTRY_USERNAME }}' \
+            --password '${{ secrets.REGISTRY_PASSWORD }}'
 
       - name: Push chart to Harbor
         run: |
