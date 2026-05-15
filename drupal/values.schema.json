@@ -6,6 +6,12 @@
     "projectName": { "type": "string" },
     "environmentName": { "type": "string" },
     "branchName": { "type": "string" },
+    "cleanup": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
     "imagePullSecrets": { "type": "array" },
     "imagePullSecret": { "type": "string" },
     "serviceAccount": {

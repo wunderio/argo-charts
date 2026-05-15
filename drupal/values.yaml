@@ -1051,3 +1051,8 @@ logging:
 # - projectName (scrambles project name subdomain, e.g., release.yyy.<clusterDomain>)
 # - both (obfuscates both, e.g., zzz.<clusterDomain>)
 maskSubdomains: none
+
+# Pre-release cleanup job (runs before sync to clear caches).
+# Disable for ArgoCD deployments where PVCs may not exist during PreSync.
+cleanup:
+  enabled: true

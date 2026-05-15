@@ -1,3 +1,4 @@
+{{- if .Values.cleanup.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -28,6 +29,7 @@ spec:
             {{- include "drupal.cleanup-job" . | nindent 12 }}
         volumeMounts:
           {{- include "drupal.volumeMounts" . | nindent 12 }}
-      serviceAccountName: {{ include "drupal.serviceAccountName" . }}
+      serviceAccountName: default
       volumes:
         {{- include "drupal.volumes" . | nindent 8 }}
+{{- end }}
