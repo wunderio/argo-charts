@@ -13,16 +13,13 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  REGISTRY_PATH: ghcr.io/wunderio/argo-charts
+  REGISTRY: registry.wdr.io
+  REGISTRY_PATH: registry.wdr.io/charts
 
 jobs:
   publish:
     name: Package & Push — ${{ matrix.chart }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -54,14 +51,14 @@ jobs:
           PKG=$(ls /tmp/charts/${{ matrix.chart }}-*.tgz)
           echo "package=${PKG}" >> "$GITHUB_OUTPUT"
 
-      - name: Log in to GHCR
+      - name: Log in to Harbor
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | \
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
             helm registry login "${{ env.REGISTRY }}" \
-              --username "${{ github.actor }}" \
+              --username "${{ secrets.REGISTRY_USERNAME }}" \
               --password-stdin
 
-      - name: Push chart to GHCR
+      - name: Push chart to Harbor
         run: |
           helm push "${{ steps.package.outputs.package }}" \
             "oci://${{ env.REGISTRY_PATH }}"
