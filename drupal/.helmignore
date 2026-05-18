@@ -1,3 +1,6 @@
+# Packaged chart archives
+*.tgz
 
-
-
+# Tests (not needed at runtime)
+tests/
+test.values.yaml
