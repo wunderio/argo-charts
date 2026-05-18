@@ -89,6 +89,8 @@ exposeDomainsDefaults:
     issuer: letsencrypt
 
 ingress:
+  # Set to false to disable Ingress resources entirely (e.g. when using httproute).
+  # enabled: true
   default:
     type: traefik
     tls: true
@@ -117,6 +119,20 @@ ingress:
     # Custom ingress annotations
     # extraAnnotations:
     #   networking.gke.io/suppress-firewall-xpn-error: "true"
+
+# Gateway API HTTPRoute + ListenerSet (alternative to Ingress).
+# When enabled, creates HTTPRoute and ListenerSet resources instead of Ingress.
+# cert-manager auto-creates Certificates from ListenerSet annotations.
+# Requires: Gateway API v1.5+, cert-manager with ListenerSet feature gate.
+httproute:
+  enabled: false
+  # Name and namespace of the shared Gateway resource.
+  gatewayName: main
+  gatewayNamespace: traefik
+  # Port on the Gateway for HTTPS listeners.
+  gatewayPort: 8443
+  # Name of the Gateway listener to attach to (must allow the app's namespace).
+  listenerName: websecure-dev
 
 # Infrastructure related settings.
 cluster:
@@ -1035,3 +1051,8 @@ logging:
 # - projectName (scrambles project name subdomain, e.g., release.yyy.<clusterDomain>)
 # - both (obfuscates both, e.g., zzz.<clusterDomain>)
 maskSubdomains: none
+
+# Pre-release cleanup job (runs before sync to clear caches).
+# Disable for ArgoCD deployments where PVCs may not exist during PreSync.
+cleanup:
+  enabled: true

@@ -1,9 +1,16 @@
+{{- if .Values.cleanup.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-cleanup"
   labels:
     {{- include "drupal.release_labels" . | nindent 4 }}
+  annotations:
+    # ArgoCD hook: run before sync, delete on success.
+    # Without these, ttlSecondsAfterFinished=0 causes the Job to self-delete
+    # and ArgoCD enters an endless sync loop trying to recreate it.
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   ttlSecondsAfterFinished: 0
   template:
@@ -22,6 +29,7 @@ spec:
             {{- include "drupal.cleanup-job" . | nindent 12 }}
         volumeMounts:
           {{- include "drupal.volumeMounts" . | nindent 12 }}
-      serviceAccountName: {{ include "drupal.serviceAccountName" . }}
+      serviceAccountName: default
       volumes:
         {{- include "drupal.volumes" . | nindent 8 }}
+{{- end }}
