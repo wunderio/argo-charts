@@ -55,7 +55,7 @@ spec:
 
       # Nginx container
       - name: nginx
-        image: {{ include "drupal.image" .Values.nginx.image | quote }}
+        image: {{ .Values.nginx.image | quote }}
         env:
         - name: RELEASE_NAME
           value: "{{ .Release.Name }}"
