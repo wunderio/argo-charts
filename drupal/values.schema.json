@@ -5,6 +5,20 @@
     "clusterDomain": { "type": "string" },
     "projectName": { "type": "string" },
     "environmentName": { "type": "string" },
+    "github": {
+      "type": "object",
+      "properties": {
+        "prComment": {
+          "type": "object",
+          "properties": {
+            "prNumber": { "type": "string" },
+            "repository": { "type": "string" },
+            "secretName": { "type": "string" },
+            "commentTag": { "type": "string" }
+          }
+        }
+      }
+    },
     "branchName": { "type": "string" },
     "cleanup": {
       "type": "object",

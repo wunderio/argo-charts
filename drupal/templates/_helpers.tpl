@@ -849,3 +849,99 @@ autoscaling/v2beta1
 {{- .Release.Name }}-sa
 {{- end }}
 {{- end }}
+
+{{/*
+Deployment notes — shared between NOTES.txt and the PR comment Job.
+Outputs Markdown-formatted environment details.
+*/}}
+{{- define "drupal.deployment-notes" -}}
+{{ $protocol := .Values.ingress.default.tls | ternary "https" "http" -}}
+**Your site is available at:**
+
+{{ $protocol }}://{{- template "drupal.domain" . }}
+{{- range $index, $prefix := .Values.domainPrefixes }}
+{{- $params := dict "prefix" $prefix }}
+{{ $protocol}}://{{ template "drupal.domain" (merge $params $ ) }}
+{{- end }}
+{{- range $index, $domain := .Values.exposeDomains }}
+{{- if $domain.ssl }}
+{{- if $domain.ssl.enabled }}
+https://{{ $domain.hostname }}
+{{- end }}
+{{- else }}
+http://{{ $domain.hostname }}
+{{- end }}
+{{- end }}
+{{- if .Values.mailhog.enabled }}
+
+**Mailhog available at:**
+
+http://{{- template "drupal.domain" . }}/mailhog
+{{- range $index, $domain := .Values.exposeDomains }}
+http://{{ $domain.hostname }}/mailhog
+{{- end }}
+> ⚠️ mailhog is deprecated — use mailpit instead.
+> See: https://wunderio.github.io/silta/docs/silta-examples#sending-e-mail
+{{- end }}
+{{- if .Values.mailpit.enabled }}
+
+**Mailpit available at:**
+
+http://{{- template "drupal.domain" . }}/mailpit
+{{- range $index, $domain := .Values.exposeDomains }}
+http://{{ $domain.hostname }}/mailpit
+{{- end }}
+{{- end }}
+{{- if .Values.nginx.basicauth.enabled }}
+
+**Basic Auth:**
+
+| | |
+|---|---|
+| Username | `{{ .Values.nginx.basicauth.credentials.username }}` |
+| Password | `{{ .Values.nginx.basicauth.credentials.password }}` |
+{{- end }}
+{{- if .Values.shell.enabled }}
+
+**SSH connection** (limited access through VPN):
+
+```
+ssh {{ include "drupal.shellHost" . }} -J {{ include "drupal.jumphost" . }}
+```
+
+<details>
+<summary>Data transfer commands</summary>
+
+**Downloading database:**
+```
+ssh {{ include "drupal.shellHost" . }} -J {{ include "drupal.jumphost" . }} "drush sql-dump" > {{ .Release.Namespace }}-{{ .Release.Name }}.sql
+```
+{{ range $index, $mount := .Values.mounts -}}
+{{ if eq $mount.enabled true -}}
+{{- $mountPath := ternary $mount.mountPath (printf "%s/" $mount.mountPath) (hasSuffix "/" $mount.mountPath) -}}
+**Downloading files from {{ $index }}:**
+```
+rsync -azv -e 'ssh -A -J {{ include "drupal.jumphost" $ }}' {{ include "drupal.shellHost" $ }}:{{ $mountPath }} {{ $.Release.Namespace }}-mounts/{{ $index }}
+```
+{{ end }}
+{{ end -}}
+**Downloading any file or folder:**
+```
+rsync -chavzP -e "ssh -A -J {{ include "drupal.jumphost" . }}" {{ include "drupal.shellHost" . }}:/app/remote-filename ./
+```
+
+**Importing database** (use with caution!):
+```
+ssh {{ include "drupal.shellHost" . }} -J {{ include "drupal.jumphost" . }} "drush sql-cli" < {{ .Release.Namespace }}-{{ .Release.Name }}.sql
+```
+{{ range $index, $mount := .Values.mounts -}}
+{{ if eq $mount.enabled true -}}
+**Uploading files to {{ $index }}:**
+```
+rsync -azv --temp-dir=/tmp/ -e 'ssh -A -J {{ include "drupal.jumphost" $ }}' {{ $.Release.Namespace }}-mounts/{{ $index }}/ {{ include "drupal.shellHost" $ }}:{{ $mount.mountPath }}
+```
+{{ end }}
+{{ end -}}
+</details>
+{{- end -}}
+{{- end -}}
