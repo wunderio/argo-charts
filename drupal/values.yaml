@@ -20,6 +20,23 @@ projectName: ""
 # This name is mainly used to create nice subdomains for each environment.
 environmentName: ""
 
+# --- GitHub PR Comment
+# When prNumber is set (injected by the platform chart for PR environments),
+# a PostSync Job posts deployment details as a PR comment via the GitHub API.
+# Requires the argocd-github-app secret in the namespace (synced by Kyverno).
+github:
+  prComment:
+    # Set automatically by the platform chart for PR environments.
+    prNumber: ""
+    # GitHub repository owner/name, e.g. "wunderio/client-fi-mysite".
+    # Set automatically by the platform chart from tenant.repoURL.
+    repository: ""
+    # Name of the Kubernetes secret containing GitHub App credentials.
+    # Must have keys: githubAppID, githubAppInstallationID, githubAppPrivateKey.
+    secretName: argocd-github-app
+    # Marker string used to upsert (update-or-create) the comment.
+    commentTag: "silta-deploy"
+
 # Configure image pull secrets for the containers. This is not needed on GKE.
 # See https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
