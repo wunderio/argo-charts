@@ -28,6 +28,21 @@
         "no_proxy": { "type": "string"}
       }
     },
-    "global": { "type": "object"}
+    "global": { "type": "object"},
+    "github": {
+      "type": "object",
+      "properties": {
+        "prComment": {
+          "type": "object",
+          "properties": {
+            "prNumber": { "type": "string" },
+            "repository": { "type": "string" },
+            "environmentUrl": { "type": "string" },
+            "secretName": { "type": "string" },
+            "commentTag": { "type": "string" }
+          }
+        }
+      }
+    }
   }
 }

@@ -1,15 +1,22 @@
 {{- if .Values.github.prComment.prNumber }}
 ---
-# PostSync Job that posts deployment details as a GitHub PR comment.
-# Only rendered for PR environments (prNumber is set by the platform chart).
-# Best-effort: the script exits 0 even if the GitHub API call fails,
-# so a comment failure does not mark the sync as failed.
+# PostSync Job that posts the preview-environment URL as a GitHub PR comment.
+#
+# Shared by every Silta chart via the silta-release library chart. Rendered ONLY
+# when github.prComment.prNumber is set — which the ArgoCD platform chart injects
+# for PR environments (as silta-release.github.prComment). In the CircleCI/Flux
+# (legacy Silta) flow these values are never set, so the Job is not rendered,
+# keeping the chart backwards compatible. The ArgoCD hook annotations are inert
+# outside ArgoCD.
+#
+# Best-effort: the script exits 0 even on GitHub API failure, so a comment
+# problem never fails the sync.
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "{{ .Release.Name }}-pr-comment"
   labels:
-    {{- include "drupal.release_labels" . | nindent 4 }}
+    release: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
@@ -20,7 +27,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "drupal.release_labels" . | nindent 8 }}
+        release: {{ .Release.Name }}
     spec:
       restartPolicy: Never
       enableServiceLinks: false
@@ -36,7 +43,7 @@ spec:
               # --- GitHub App authentication ---
               PRIVATE_KEY_FILE="/github-app/githubAppPrivateKey"
 
-              # Build JWT (RS256, valid 5 minutes)
+              # Build a JWT (RS256, valid 5 minutes).
               NOW=$(date +%s)
               IAT=$((NOW - 60))
               EXP=$((NOW + 300))
@@ -45,7 +52,7 @@ spec:
               SIGNATURE=$(printf '%s.%s' "$HEADER" "$PAYLOAD" | openssl dgst -sha256 -sign "$PRIVATE_KEY_FILE" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
               JWT="${HEADER}.${PAYLOAD}.${SIGNATURE}"
 
-              # Exchange JWT for installation access token
+              # Exchange the JWT for an installation access token.
               TOKEN=$(curl -sf -X POST \
                 -H "Authorization: Bearer ${JWT}" \
                 -H "Accept: application/vnd.github+json" \
@@ -60,13 +67,12 @@ spec:
                 exit 0
               fi
 
-              # --- Post or update PR comment ---
+              # --- Upsert the PR comment (find by marker, then PATCH or POST) ---
               REPO="{{ .Values.github.prComment.repository }}"
               PR_NUMBER="{{ .Values.github.prComment.prNumber }}"
               COMMENT_TAG="{{ .Values.github.prComment.commentTag }}-{{ .Release.Name }}"
               MARKER="<!-- ${COMMENT_TAG} -->"
 
-              # Find existing comment by marker
               EXISTING_ID=$(curl -sf \
                 -H "Authorization: token ${TOKEN}" \
                 -H "Accept: application/vnd.github+json" \
@@ -125,21 +131,24 @@ spec:
           configMap:
             name: {{ .Release.Name }}-pr-comment-body
 ---
-# ConfigMap holding the Helm-rendered comment body.
-# Separating it from the Job args avoids shell escaping issues with
-# the rendered Markdown content.
+# ConfigMap holding the Helm-rendered comment body. Kept separate from the Job
+# args to avoid shell-escaping issues with the rendered Markdown.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-pr-comment-body
   labels:
-    {{- include "drupal.release_labels" . | nindent 4 }}
+    release: {{ .Release.Name }}
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 data:
   comment-body.txt: |
-    ### :rocket: Deployment — `{{ .Release.Name }}`
-    {{ include "drupal.deployment-notes" . | nindent 4 }}
+    ### :rocket: Preview environment — `{{ .Release.Name }}`
+
+    Your pull request is deployed to a preview environment:
+
+    {{ if .Values.github.prComment.environmentUrl }}**{{ .Values.github.prComment.environmentUrl }}**{{ else }}_(environment URL not provided)_{{ end }}
+
     <!-- {{ .Values.github.prComment.commentTag }}-{{ .Release.Name }} -->
 {{- end }}
