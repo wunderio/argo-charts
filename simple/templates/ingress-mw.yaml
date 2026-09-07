@@ -27,6 +27,7 @@ spec:
 {{- end }}
 
 {{- range $ingress_index, $ingress := $.Values.ingress }}
+{{- if kindIs "map" $ingress }}
 ---
 {{- $ingress := mergeOverwrite (deepCopy $.Values.ingress.default) $ingress }}
 {{- if or (eq $ingress.type "traefik") (eq $ingress.type "nginx") }}
@@ -51,6 +52,7 @@ spec:
     period: 1s
   {{- end }}
   {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

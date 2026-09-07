@@ -29,7 +29,7 @@ spec:
             {{- include "drupal.cleanup-job" . | nindent 12 }}
         volumeMounts:
           {{- include "drupal.volumeMounts" . | nindent 12 }}
-      serviceAccountName: default
+      serviceAccountName: {{ include "drupal.serviceAccountName" . }}
       volumes:
         {{- include "drupal.volumes" . | nindent 8 }}
 {{- end }}

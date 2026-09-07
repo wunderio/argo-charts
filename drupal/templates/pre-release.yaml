@@ -11,6 +11,9 @@ metadata:
   labels:
     {{- include "drupal.release_labels" . | nindent 4 }}
   annotations:
+    # Keep Helm hook annotations for backwards compatibility with Helm releases.
+    "helm.sh/hook": "pre-upgrade"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
     # ArgoCD hook: run before sync (backup/pre-upgrade tasks).
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation

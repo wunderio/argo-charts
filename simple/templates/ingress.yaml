@@ -121,6 +121,7 @@ spec:
 ---
 # Ingresses for exposeDomains 
 {{- range $ingress_index, $ingress := $.Values.ingress }}
+{{- if kindIs "map" $ingress }}
 {{- $ingress := mergeOverwrite (deepCopy $.Values.ingress.default) $ingress }}
 
 {{- $ingress_in_use := false }}
@@ -274,6 +275,7 @@ spec:
   {{- end }}
   {{- end }}
 ---
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
