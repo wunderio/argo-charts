@@ -1,4 +1,11 @@
-{{- if .Values.github.prComment.prNumber }}
+{{- $localGithub := index .Values "github" | default dict }}
+{{- $prComment := index $localGithub "prComment" | default dict }}
+{{- if not (index $prComment "prNumber") }}
+{{- $siltaRelease := index .Values "silta-release" | default dict }}
+{{- $platformGithub := index $siltaRelease "github" | default dict }}
+{{- $prComment = index $platformGithub "prComment" | default dict }}
+{{- end }}
+{{- if index $prComment "prNumber" }}
 ---
 # PostSync Job that posts deployment details as a GitHub PR comment.
 # Only rendered for PR environments (prNumber is set by the platform chart).
@@ -61,9 +68,9 @@ spec:
               fi
 
               # --- Post or update PR comment ---
-              REPO="{{ .Values.github.prComment.repository }}"
-              PR_NUMBER="{{ .Values.github.prComment.prNumber }}"
-              COMMENT_TAG="{{ .Values.github.prComment.commentTag }}-{{ .Release.Name }}"
+              REPO="{{ get $prComment "repository" }}"
+              PR_NUMBER="{{ get $prComment "prNumber" }}"
+              COMMENT_TAG="{{ get $prComment "commentTag" }}-{{ .Release.Name }}"
               MARKER="<!-- ${COMMENT_TAG} -->"
 
               # Find existing comment by marker
@@ -94,12 +101,12 @@ spec:
             - name: GITHUB_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.github.prComment.secretName }}
+                  name: {{ get $prComment "secretName" }}
                   key: githubAppID
             - name: GITHUB_APP_INSTALLATION_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.github.prComment.secretName }}
+                  name: {{ get $prComment "secretName" }}
                   key: githubAppInstallationID
           volumeMounts:
             - name: github-app-key
@@ -117,7 +124,7 @@ spec:
       volumes:
         - name: github-app-key
           secret:
-            secretName: {{ .Values.github.prComment.secretName }}
+            secretName: {{ get $prComment "secretName" }}
             items:
               - key: githubAppPrivateKey
                 path: githubAppPrivateKey
@@ -141,5 +148,5 @@ data:
   comment-body.txt: |
     ### :rocket: Deployment — `{{ .Release.Name }}`
     {{ include "drupal.deployment-notes" . | nindent 4 }}
-    <!-- {{ .Values.github.prComment.commentTag }}-{{ .Release.Name }} -->
+    <!-- {{ get $prComment "commentTag" }}-{{ .Release.Name }} -->
 {{- end }}

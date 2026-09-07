@@ -1,9 +1,4 @@
 {{- if or (ne .Values.php.preupgrade.command "") .Values.php.preupgrade.backup }}
-{{- $claimName := printf "%s-backup" .Release.Name }}
-{{- if and ( eq $.Values.backup.storageClassName "silta-shared" ) ( eq ( include "silta-cluster.rclone.has-provisioner" $ ) "true" ) }}
-{{- $claimName = printf "%s-backup2" .Release.Name }}
-{{- end }}
-{{- if lookup "v1" "PersistentVolumeClaim" .Release.Namespace $claimName }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -60,5 +55,4 @@ spec:
             claimName: {{ .Release.Name }}-backup
             {{- end }}
         {{- end }}
-{{- end }}
 {{- end }}
