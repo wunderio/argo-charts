@@ -127,6 +127,9 @@ imagePullSecrets:
     secretKeyRef:
       name: {{ .Release.Name }}-secrets-smtp
       key: password
+      {{- if .optionalSecrets }}
+      optional: true
+      {{- end }}
 # Duplicate SMTP env variables for ssmtp bundled with amazee php image
 - name: SSMTP_MAILHUB
   {{- if .Values.mailpit.enabled }}
@@ -147,6 +150,9 @@ imagePullSecrets:
     secretKeyRef:
       name: {{ .Release.Name }}-secrets-smtp
       key: password
+      {{- if .optionalSecrets }}
+      optional: true
+      {{- end }}
 {{- end }}
 
 {{- define "drupal.ref-data-env" }}
@@ -212,6 +218,14 @@ imagePullSecrets:
 {{- end }}
 
 {{- define "drupal.env" }}
+{{- include "drupal.env-common" . }}
+{{- end }}
+
+{{- define "drupal.pre-release-env" }}
+{{- include "drupal.env-common" (merge (dict "optionalSecrets" true) .) }}
+{{- end }}
+
+{{- define "drupal.env-common" }}
 - name: SILTA_CLUSTER
   value: "1"
 - name: PROJECT_NAME
@@ -252,6 +266,9 @@ imagePullSecrets:
     secretKeyRef:
       name: {{ .Release.Name }}-redis
       key: redis-password
+      {{- if .optionalSecrets }}
+      optional: true
+      {{- end }}
 {{- end }}
 {{- if .Values.elasticsearch.enabled }}
 - name: ELASTICSEARCH_HOST
@@ -283,6 +300,9 @@ imagePullSecrets:
     secretKeyRef:
       name: {{ .Release.Name }}-secrets-varnish
       key: control_key
+      {{- if .optionalSecrets }}
+      optional: true
+      {{- end }}
 {{- end }}
 - name: HASH_SALT
   valueFrom:

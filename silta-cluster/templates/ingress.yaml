@@ -10,6 +10,9 @@ metadata:
     kubernetes.io/ingress.class: {{ $ingress.class | quote }}
     {{- end }}
     {{- if .Values.ssl.enabled }}
+
+    cert-manager.io/cluster-issuer: {{ .Values.ssl.issuer | quote }}
+
     {{- if eq $ingress.class "traefik" }}
     traefik.ingress.kubernetes.io/frontend-entry-points: "http,https"
     {{- end }}
@@ -35,7 +38,7 @@ metadata:
     nginx.org/redirect-to-https: {{ $redirect_https | quote }}
     {{- end }}
     {{- end }}
-    
+
     {{- if eq ( include "silta-cluster.cert-manager-api-version" . | trim ) "cert-manager.io/v1" }}
     acme.cert-manager.io/http01-edit-in-place: "true"
     {{- else }}
@@ -46,14 +49,10 @@ metadata:
     traefik.ingress.kubernetes.io/frontend-entry-points: "http"
     {{- end }}
     {{- end }}
-    {{- if eq $ingress.class "gce" }}
-    cert-manager.io/cluster-issuer: letsencrypt
-    {{- end }}
     {{- if $ingress.staticIpAddressName }}
     kubernetes.io/ingress.global-static-ip-name: {{ $ingress.staticIpAddressName | quote }}
     {{- end }}
     {{- if eq $ingress.class "azure/application-gateway" }}
-    cert-manager.io/cluster-issuer: letsencrypt
     appgw.ingress.kubernetes.io/health-probe-status-codes: "200-399, 401-404"
     {{- end }}
     {{- if $ingress.extraAnnotations }}
@@ -66,7 +65,10 @@ spec:
   {{- if .Values.ssl.enabled }}
   tls:
   - secretName: {{ .Release.Name }}-tls
-    hosts: 
+    hosts:
+      {{- if .Values.ssl.wildcard }}
+      - "*.{{ .Values.clusterDomain }}"
+      {{- else }}
       {{- if $ingress.enabled }}
       - {{ .Values.clusterDomain }}
       {{- end }}
@@ -82,6 +84,7 @@ spec:
       {{- if index (index .Values "docker-registry") "enabled" }}
       - registry.{{ .Values.clusterDomain }}
       {{- end }}
+      {{- end }}
   {{- end }}
   rules:
   {{- if $ingress.enabled }}
@@ -96,7 +99,7 @@ spec:
           {{- if eq ( include "silta-cluster.ingress-api-version" . | trim ) "networking.k8s.io/v1" }}
           service:
             name: {{ .Release.Name }}-splash
-            port: 
+            port:
               number: 80
           {{- else }}
           serviceName: {{ .Release.Name }}-splash
@@ -115,7 +118,7 @@ spec:
           {{- if eq ( include "silta-cluster.ingress-api-version" . | trim ) "networking.k8s.io/v1" }}
           service:
             name: {{ .Release.Name }}-deployment-remover
-            port: 
+            port:
               number: 80
           {{- else }}
           serviceName: {{ .Release.Name }}-deployment-remover
@@ -134,7 +137,7 @@ spec:
           {{- if eq ( include "silta-cluster.ingress-api-version" . | trim ) "networking.k8s.io/v1" }}
           service:
             name: {{ .Release.Name }}-ssh-key-server
-            port: 
+            port:
               number: 80
           {{- else }}
           serviceName: {{ .Release.Name }}-ssh-key-server
@@ -153,7 +156,7 @@ spec:
           {{- if eq ( include "silta-cluster.ingress-api-version" . | trim ) "networking.k8s.io/v1" }}
           service:
             name: {{ .Release.Name }}-placeholder-upscaler
-            port: 
+            port:
               number: 80
           {{- else }}
           serviceName: {{ .Release.Name }}-placeholder-upscaler
@@ -172,7 +175,7 @@ spec:
           {{- if eq ( include "silta-cluster.ingress-api-version" . | trim ) "networking.k8s.io/v1" }}
           service:
             name: {{ .Release.Name }}-docker-registry
-            port: 
+            port:
               number: 80
           {{- else }}
           serviceName: {{ .Release.Name }}-docker-registry
