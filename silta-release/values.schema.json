@@ -37,6 +37,8 @@
           "properties": {
             "prNumber": { "type": "string" },
             "repository": { "type": "string" },
+            "enabled": { "type": "boolean" },
+            "environmentUrl": { "type": "string" },
             "secretName": { "type": "string" },
             "commentTag": { "type": "string" }
           }

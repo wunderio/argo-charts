@@ -1,5 +1,11 @@
 # Subchart with few functionality that is reused for our other charts
 silta-release:
+  github:
+    prComment:
+      # Drupal renders its own PR-comment Job (templates/github-pr-comment.yaml)
+      # which includes deployment details, so the generic silta-release Job must
+      # stay off — otherwise a PR environment gets two comments per sync.
+      enabled: false
   # Enable downscaler by default.
   downscaler:
     enabled: true
