@@ -13,6 +13,19 @@ silta-release:
     # releaseMinAge: '1w'
     releaseMinAge: ''
 
+# ArgoCD deployment mode. The ArgoCD platform chart sets this to true; the
+# CircleCI/Flux (legacy Silta) flow leaves it false.
+#
+# It only affects how the pre-release hooks are scheduled. ArgoCD runs the whole
+# PreSync phase before the Sync phase creates PVCs and ConfigMaps, so a PreSync
+# Job that mounts them stays Pending forever on a first sync and blocks the
+# deployment. With this enabled those Jobs become Sync-phase hooks ordered after
+# the volumes (sync-wave 1, deployments at 2) instead, and the pre-release Job
+# drops its lookup guard — ArgoCD's repo-server has no cluster access, so lookup
+# always returns empty there and the Job would never render at all.
+argocd:
+  enabled: false
+
 # Main domain of the cluster.
 # Subdomains of this domain will be created automatically for each environment.
 clusterDomain: "silta.wdr.io"

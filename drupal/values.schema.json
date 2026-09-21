@@ -20,6 +20,12 @@
       }
     },
     "branchName": { "type": "string" },
+    "argocd": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
     "cleanup": {
       "type": "object",
       "properties": {
