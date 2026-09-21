@@ -1,4 +1,7 @@
-{{- if ne ((.Values.ingress).enabled | toString) "false" }}
+{{- /* HTTPRoute replaces the Ingress and issues its own Certificates, so this
+     must stay off when httproute.enabled is set — otherwise the release
+     carries two objects with the same Certificate names and fails to apply. */}}
+{{- if and (ne ((.Values.ingress).enabled | toString) "false") (not (.Values.httproute).enabled) }}
 {{- $ingress := .Values.ingress.default }}
 {{- $context_ssl := .Values.ssl }}
 {{- $cluster_issuer := "" }}
