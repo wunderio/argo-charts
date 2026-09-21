@@ -27,7 +27,6 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- end }}
 
 {{- range $ingress_index, $ingress := $.Values.ingress }}
 {{- if kindIs "map" $ingress }}
@@ -55,6 +54,7 @@ spec:
     period: 1s
   {{- end }}
   {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
